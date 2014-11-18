@@ -11,8 +11,14 @@ Run the server `docker-instrospection`. Use `-h` to see command line options.
 
 From within a container, get the container id then use `curl` to fetch information:
 
-	CONTAINER_ID=$(cat /proc/self/cgroup |grep cpu:| sed -r 's#.*docker/(.{12}).*#\1#'­)
+    CONTAINER_ID=$(cat /proc/self/cgroup |grep cpu:| sed -r 's#.*docker/(.{12}).*#\1#'­)
     curl http://172.17.42.1:5000/containers/$CONTAINER_ID
+
+Or better yet, just use the magic `_myself` container name to get your metadata:
+
+    curl http://172.17.42.1:5000/containers/_myself
+    
+This is done by iterating on the metadata of all containers and comparing the source ip so it's probably not a good idea if you have a lot (> 1000) of containers and won't work if you are not using the internal network.
 
 You probably want to define a bash function to do this easily:
 

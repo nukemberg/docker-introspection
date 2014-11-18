@@ -37,11 +37,18 @@ api = Api(app)
 class DockerContainer(Resource):
     def get(self, container_id, config_item=None):
         source_container_id = self._get_source_container_id()
+
+        if container_id == '_myself':
+            container_id = source_container_id
+
         if not (source_container_id == container_id or source_container_id[:12] == container_id):
             abort(401)
+
         container_info = app._docker_client.inspect_container(container_id)
+
         if not container_info:
             abort(404)
+
         if config_item:
             if not config_item.lower() in config_names: abort(404)
             config_item = config_names[config_item.lower()]
