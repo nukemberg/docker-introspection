@@ -38,7 +38,7 @@ class DockerContainer(Resource):
     def get(self, container_id, config_item=None):
         container_info = app._docker_client.inspect_container(container_id)
         if not container_info:
-            return abort(404)
+            abort(404)
         if config_item:
             if not config_item.lower() in config_names: abort(404)
             config_item = config_names[config_item.lower()]
