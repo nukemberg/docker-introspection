@@ -1,7 +1,7 @@
 #!/usr/bin/env
 
 import docker
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import abort, Resource, Api
 from argparse import ArgumentParser
 
@@ -36,6 +36,9 @@ api = Api(app)
 
 class DockerContainer(Resource):
     def get(self, container_id, config_item=None):
+        source_container_id = self._get_source_container_id()
+        if not (source_container_id == container_id or source_container_id[:12] == container_id):
+            abort(401)
         container_info = app._docker_client.inspect_container(container_id)
         if not container_info:
             abort(404)
@@ -49,6 +52,9 @@ class DockerContainer(Resource):
         else:
             return container_info
 
+    def _get_source_container_id(self):
+        ip2id_map = {c_info['NetworkSettings']['IPAddress']: c_info['Id'] for c_info in map(app._docker_client.inspect_container, app._docker_client.containers())}
+        return ip2id_map[request.remote_addr]
 
 api.add_resource(DockerContainer, '/containers/<string:container_id>', '/containers/<string:container_id>/<string:config_item>')
 
@@ -57,7 +63,7 @@ def main():
     parser.add_argument("-p", dest='port', default=5000, help="The port to listen on")
     parser.add_argument("-u", dest='url', default='unix://var/run/docker.sock', help="Docker API url")
     parser.add_argument("-b", dest='bind_address', default='172.17.42.1', help="Address to listen (bind) on")
-    parser.add_argument("-d", dest='debug', default=False, help="Debug mode")
+    parser.add_argument("-d", dest='debug', default=False, help="Debug mode", action='store_true')
     opts = parser.parse_args()
 
     app._docker_client = docker.Client(opts.url)
