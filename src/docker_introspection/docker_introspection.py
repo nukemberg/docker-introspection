@@ -36,13 +36,14 @@ api = Api(app)
 
 class DockerContainer(Resource):
     def get(self, container_id, config_item=None):
-        source_container_id = self._get_source_container_id()
+        if not app._no_auth:
+            source_container_id = self._get_source_container_id()
 
-        if container_id == '_myself':
-            container_id = source_container_id
+            if container_id == '_myself':
+                container_id = source_container_id
 
-        if not (source_container_id == container_id or source_container_id[:12] == container_id):
-            abort(401)
+            if not (source_container_id == container_id or source_container_id[:12] == container_id):
+                abort(401)
 
         container_info = app._docker_client.inspect_container(container_id)
 
@@ -71,9 +72,11 @@ def main():
     parser.add_argument("-u", dest='url', default='unix://var/run/docker.sock', help="Docker API url")
     parser.add_argument("-b", dest='bind_address', default='172.17.42.1', help="Address to listen (bind) on")
     parser.add_argument("-d", dest='debug', default=False, help="Debug mode", action='store_true')
+    parser.add_argument("--no-auth", dest='no_auth', default=False, help="Disable source IP checks", action='store_true')
     opts = parser.parse_args()
 
     app._docker_client = docker.Client(opts.url)
+    app._no_auth = opts.no_auth
 
     app.run(debug=opts.debug, port=opts.port, host=opts.bind_address)
 

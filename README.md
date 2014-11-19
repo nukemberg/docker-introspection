@@ -36,3 +36,5 @@ function container_metadata () {
 The API will provide individual config items such as memory, volumes, etc. - just append the item name as the last url component.
 
 The API output is currently json only. Use `jq` or whatever - i'll make this more friendly when I have some time.
+
+The `--no-auth` flag will disable source IP checks thus allowing containers to view the metadata of all containers. It also disable the magic `_myself` container id.
